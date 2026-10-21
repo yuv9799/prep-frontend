@@ -130,6 +130,9 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorBody>) => {
+    // Preserve intentional client-side configuration errors without rewriting them as network failures.
+    if (error instanceof ApiError) return Promise.reject(error)
+
     const status = error.response?.status ?? 0
     const body = error.response?.data
 
