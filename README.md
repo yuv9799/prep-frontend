@@ -1,25 +1,20 @@
 # Prep Frontend
 
-Frontend application for the Prep project.
+Vite + React frontend for PrepForge.
 
-## Live site
+## Local development
 
-https://yuv9799.github.io/prep-frontend/
+1. Install dependencies: `npm ci`.
+2. Keep `VITE_API_URL=/api` in `.env.local` so Vite proxies API requests to `http://localhost:8080`.
+3. Start the backend in the separate `prep-backend` repository, then run `npm run dev`.
+4. Run checks with `npm run typecheck`, `npm test`, and `npm run build`.
 
-## GitHub Pages deployment
+## Production API connection
 
-The `.github/workflows/deploy.yml` workflow builds the Vite app for the repository subpath. It sets `GITHUB_PAGES=true`, which makes Vite generate asset URLs under `/prep-frontend/`. The React Router uses Vite's base URL so deep links work, and `public/.nojekyll` disables Jekyll processing of the static artifact.
+The frontend must point to the deployed backend, not to `/api` on the static hosting domain. In GitHub, open **Settings → Secrets and variables → Actions → Variables**, create a repository variable named `VITE_API_URL`, and set it to the deployed backend base URL ending in `/api` (for example `https://your-service.onrender.com/api`). Then run **Actions → Deploy Prep Frontend to GitHub Pages → Run workflow** on `master`.
 
-The Pages artifact must reference assets under `/prep-frontend/assets/` (not `/assets/`). Check the **Actions** tab for the “Deploy Prep Frontend to GitHub Pages” run after source changes. If no run starts, choose **Actions → Deploy Prep Frontend to GitHub Pages → Run workflow** on branch `master`.
+The deploy workflow sets `GITHUB_PAGES=true`, builds assets under `/prep-frontend/`, and preserves SPA routes on refresh. A missing production API variable produces a clear configuration error instead of sending requests to a GitHub Pages 404 page.
 
-## Requirements
-- Node.js 22 or compatible
-- npm
+Live site: https://yuv9799.github.io/prep-frontend/
 
-## Setup
-1. Install dependencies: `npm ci`
-2. Copy `.env.example` to `.env.local` and configure the backend API URL if required.
-3. Run locally: `npm run dev`
-4. Check types/build/tests using the scripts declared in `package.json`.
-
-The backend service lives in the separate `prep-backend` repository. Do not commit real environment secrets.
+Do not commit `.env.local` or production secrets.
