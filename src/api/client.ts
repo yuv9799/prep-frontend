@@ -1,7 +1,49 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import type { ApiErrorBody } from '../types/core'
 
-const API_URL = import.meta.env.VITE_API_URL ?? '/api'
+const configuredApiUrl = (import.meta.env.VITE_API_URL ?? '').trim()
+
+function normalizeApiBaseUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) return import.meta.env.DEV ? '/api' : ''
+
+  // Accept either the backend origin or its explicit /api base URL.
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed)
+      if (!url.pathname || url.pathname === '/') url.pathname = '/api'
+      return url.toString().replace(/\/+$/, '')
+    } catch {
+      return trimmed
+    }
+  }
+
+  return trimmed
+}
+
+const API_URL = normalizeApiBaseUrl(configuredApiUrl)
+const API_URL_CONFIGURED = import.meta.env.DEV || /^https?:\/\//i.test(API_URL)
+
+const ACCESS_TOKEN_KEY = 'prepforge.accessToken'
+const REFRESH_TOKEN_KEY = 'prepforge.refreshToken'
+
+function readSessionValue(key: string): string | null {
+  try {
+    return typeof window === 'undefined' ? null : window.sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeSessionValue(key: string, value: string | null): void {
+  try {
+    if (typeof window === 'undefined') return
+    if (value) window.sessionStorage.setItem(key, value)
+    else window.sessionStorage.removeItem(key)
+  } catch {
+    // Keep the in-memory session usable if browser storage is unavailable.
+  }
+}
 
 /** Normalized error surfaced to the UI. */
 export class ApiError extends Error {
@@ -34,15 +76,32 @@ export class ApiError extends Error {
   }
 }
 
-let accessToken: string | null = null
+let accessToken: string | null = readSessionValue(ACCESS_TOKEN_KEY)
+let refreshToken: string | null = readSessionValue(REFRESH_TOKEN_KEY)
 
-/** In-memory bearer token used when the backend does not rely solely on cookies. */
+/** Short-lived bearer token; sessionStorage allows an SPA reload in the same tab. */
 export function setAccessToken(token: string | null) {
   accessToken = token
+  writeSessionValue(ACCESS_TOKEN_KEY, token)
 }
 
 export function getAccessToken() {
   return accessToken
+}
+
+/** Refresh tokens are stored per-tab because the API may be hosted cross-site. */
+export function setRefreshToken(token: string | null) {
+  refreshToken = token
+  writeSessionValue(REFRESH_TOKEN_KEY, token)
+}
+
+export function getRefreshToken() {
+  return refreshToken
+}
+
+export function clearAuthTokens() {
+  setAccessToken(null)
+  setRefreshToken(null)
 }
 
 export const apiClient: AxiosInstance = axios.create({
@@ -53,6 +112,15 @@ export const apiClient: AxiosInstance = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
+  if (!API_URL_CONFIGURED) {
+    return Promise.reject(
+      new ApiError(
+        'The backend URL is not configured. Set VITE_API_URL to your deployed backend URL (for example, https://your-service.onrender.com/api).',
+        0,
+        { message: 'Backend API URL is missing', code: 'API_NOT_CONFIGURED' },
+      ),
+    )
+  }
   if (accessToken) {
     config.headers.set('Authorization', `Bearer ${accessToken}`)
   }
