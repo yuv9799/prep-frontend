@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authApi } from '../api/auth'
-import { setAccessToken } from '../api/client'
+import { clearAuthTokens } from '../api/client'
 import type { LoginPayload, RegisterPayload, User } from '../types/auth'
 
 interface AuthContextValue {
@@ -22,11 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const current = await authApi.me()
+      const current = await authApi.restoreSession()
       setUser(current)
     } catch {
       setUser(null)
-      setAccessToken(null)
     } finally {
       setIsLoading(false)
     }
@@ -37,13 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const load = async () => {
       try {
-        const current = await authApi.me()
+        const current = await authApi.restoreSession()
         if (!cancelled) setUser(current)
       } catch {
-        if (!cancelled) {
-          setUser(null)
-          setAccessToken(null)
-        }
+        if (!cancelled) setUser(null)
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -74,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authApi.logout()
     } finally {
       setUser(null)
-      setAccessToken(null)
+      clearAuthTokens()
     }
   }, [])
 
