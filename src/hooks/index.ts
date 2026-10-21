@@ -1,0 +1,230 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query'
+import {
+  analyticsApi,
+  authApi,
+  projectsApi,
+  questionsApi,
+  revisionsApi,
+  subjectsApi,
+  subtopicsApi,
+  patternsApi,
+  taskLogsApi,
+  tasksApi,
+  topicsApi,
+} from '../api'
+import type { QuestionFilters } from '../api/questions'
+import type {
+  AnalyticsOverview,
+  DashboardSummary,
+  Pattern,
+  Subtopic,
+  Subject,
+  SubjectProgress,
+  Task,
+  TaskLog,
+  Topic,
+} from '../types/model'
+
+export const queryKeys = {
+  dashboard: ['dashboard'] as const,
+  overview: ['analytics', 'overview'] as const,
+  activity: ['analytics', 'activity'] as const,
+  subjectProgress: ['analytics', 'subjects'] as const,
+  subjects: ['subjects'] as const,
+  topics: (subjectId?: string) => ['topics', subjectId ?? 'all'] as const,
+  subtopics: (topicId: string) => ['subtopics', topicId] as const,
+  patterns: (topicId: string) => ['patterns', topicId] as const,
+  questions: (filters?: unknown) => ['questions', filters ?? {}] as const,
+  tasks: (status?: string) => ['tasks', status ?? 'all'] as const,
+  taskLogs: ['task-logs'] as const,
+  revisions: ['revisions'] as const,
+  projects: ['projects'] as const,
+  achievements: ['achievements'] as const,
+  resume: ['resume'] as const,
+  resumeProposals: ['resume', 'proposals'] as const,
+  sessions: () => ['sessions'] as const,
+  session: (id: string) => ['session', id] as const,
+}
+
+export function useDashboardQuery(): UseQueryResult<DashboardSummary> {
+  return useQuery({
+    queryKey: queryKeys.dashboard,
+    queryFn: () => analyticsApi.dashboard(),
+  })
+}
+
+export function useAnalyticsOverviewQuery(): UseQueryResult<AnalyticsOverview> {
+  return useQuery({
+    queryKey: queryKeys.overview,
+    queryFn: () => analyticsApi.overview(),
+  })
+}
+
+export function useSubjectProgressQuery(): UseQueryResult<SubjectProgress[]> {
+  return useQuery({
+    queryKey: queryKeys.subjectProgress,
+    queryFn: () => analyticsApi.subjectProgress(),
+  })
+}
+
+export function useSubjectsQuery(): UseQueryResult<Subject[]> {
+  return useQuery({
+    queryKey: queryKeys.subjects,
+    queryFn: () => subjectsApi.list(),
+  })
+}
+
+export function useTopicsQuery(subjectId?: string, enabled = true): UseQueryResult<Topic[]> {
+  return useQuery({
+    queryKey: queryKeys.topics(subjectId),
+    queryFn: () => topicsApi.list(subjectId),
+    enabled: enabled && subjectId !== undefined,
+  })
+}
+
+export function useSubtopicsQuery(topicId: string): UseQueryResult<Subtopic[]> {
+  return useQuery({
+    queryKey: queryKeys.subtopics(topicId),
+    queryFn: () => subtopicsApi.list(topicId),
+    enabled: Boolean(topicId),
+  })
+}
+
+export function usePatternsQuery(topicId: string): UseQueryResult<Pattern[]> {
+  return useQuery({
+    queryKey: queryKeys.patterns(topicId),
+    queryFn: () => patternsApi.list(topicId),
+    enabled: Boolean(topicId),
+  })
+}
+
+export function useQuestionsQuery(filters: QuestionFilters = {}) {
+  return useQuery({
+    queryKey: queryKeys.questions(filters),
+    queryFn: () => questionsApi.list(filters),
+  })
+}
+
+export function useAttemptQuestionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...payload
+    }: {
+      id: string
+      answer: string | string[] | number | null
+      timeTakenSeconds?: number
+    }) => questionsApi.attempt(id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['questions'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void queryClient.invalidateQueries({ queryKey: ['analytics'] })
+    },
+  })
+}
+
+export function useTasksQuery(status?: Task['status']): UseQueryResult<Task[]> {
+  return useQuery({
+    queryKey: queryKeys.tasks(status),
+    queryFn: () => tasksApi.list(status),
+  })
+}
+
+export function useTaskLogsQuery(): UseQueryResult<TaskLog[]> {
+  return useQuery({
+    queryKey: queryKeys.taskLogs,
+    queryFn: () => taskLogsApi.list(),
+  })
+}
+
+export function useCompleteTaskMutation(): UseMutationResult<Task, Error, string> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => tasksApi.complete(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useCreateTaskMutation(): UseMutationResult<
+  Task,
+  Error,
+  Parameters<typeof tasksApi.create>[0]
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload) => tasksApi.create(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+
+export function useDeleteTaskMutation(): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => tasksApi.remove(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+
+export function useRevisionsQuery() {
+  return useQuery({
+    queryKey: queryKeys.revisions,
+    queryFn: () => revisionsApi.list(),
+  })
+}
+
+export function useReviewMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, quality }: { id: string; quality: number }) => revisionsApi.review(id, quality),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['revisions'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useProjectsQuery() {
+  return useQuery({
+    queryKey: queryKeys.projects,
+    queryFn: () => projectsApi.list(),
+  })
+}
+
+export function useCreateProjectMutation(): UseMutationResult<
+  Awaited<ReturnType<typeof projectsApi.create>>,
+  Error,
+  Parameters<typeof projectsApi.create>[0]
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload) => projectsApi.create(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+export function useProfileMutation(): UseMutationResult<
+  Awaited<ReturnType<typeof authApi.updateProfile>>,
+  Error,
+  Parameters<typeof authApi.updateProfile>[0]
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload) => authApi.updateProfile(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['auth'] })
+    },
+  })
+}
+
+export { useStudySessions, useCreateSessionMutation, useUpdateSessionMutation } from './use-study-sessions'

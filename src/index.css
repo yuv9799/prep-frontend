@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  PrepForge palette (exact)
+  peach         #F9B294
+  coral         #F2727F
+  muted rose    #C06C84
+  dusty purple  #6C5C7E
+  deep slate    #355D7F
+*/
+@theme {
+  --color-peach: #f9b294;
+  --color-peach-soft: #fce4d7;
+  --color-coral: #f2727f;
+  --color-coral-soft: #fde0e3;
+  --color-rose-muted: #c06c84;
+  --color-rose-muted-soft: #f4dfe4;
+  --color-purple-dusty: #6c5c7e;
+  --color-purple-dusty-soft: #e4dfe9;
+  --color-slate-deep: #355d7f;
+  --color-slate-deep-soft: #dde5ee;
+
+  --color-surface: #ffffff;
+  --color-surface-raised: #fbfaf9;
+  --color-surface-sunken: #f4f2f1;
+  --color-ink: #1f1b24;
+  --color-ink-soft: #5b5563;
+  --color-ink-faint: #8b8593;
+  --color-line: #e7e3e0;
+  --color-line-strong: #d5cfcb;
+
+  --color-brand: var(--color-coral);
+  --color-brand-strong: var(--color-rose-muted);
+  --color-accent: var(--color-purple-dusty);
+  --color-info: var(--color-slate-deep);
+
+  --color-positive: #3f7d5b;
+  --color-caution: #b07a2b;
+  --color-danger: #c0392f;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+
+  --shadow-soft: 0 1px 2px rgb(31 27 36 / 0.05), 0 8px 24px -12px rgb(31 27 36 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(31 27 36 / 0.06), 0 16px 40px -16px rgb(31 27 36 / 0.28);
+}
+
+.dark {
+  --color-surface: #16131b;
+  --color-surface-raised: #1f1b26;
+  --color-surface-sunken: #120f16;
+  --color-ink: #f2eef4;
+  --color-ink-soft: #b3aabb;
+  --color-ink-faint: #7d7487;
+  --color-line: #2e2836;
+  --color-line-strong: #3d3648;
+
+  --color-peach-soft: #3a2b2a;
+  --color-coral-soft: #3b2329;
+  --color-rose-muted-soft: #38242c;
+  --color-purple-dusty-soft: #2b2636;
+  --color-slate-deep-soft: #1f2b3a;
+
+  --color-positive: #6fc294;
+  --color-caution: #e0b062;
+  --color-danger: #f0837a;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.45), 0 16px 40px -16px rgb(0 0 0 / 0.7);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-ink);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .pf-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .pf-input {
+    width: 100%;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-line-strong);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .pf-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .pf-input:focus {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 1px;
+    border-color: var(--color-coral);
+  }
+
+  .pf-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.375rem;
+  }
+}
+
+@layer utilities {
+  .pf-scroll-thin {
+    scrollbar-width: thin;
+  }
+}
