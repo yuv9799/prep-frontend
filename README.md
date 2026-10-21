@@ -2,6 +2,11 @@
 
 Frontend application for the Prep project.
 
+## Live site
+
+Once the GitHub Pages workflow completes, the site will be available at:
+https://yuv9799.github.io/prep-frontend/
+
 ## Requirements
 - Node.js 22 or compatible
 - npm
