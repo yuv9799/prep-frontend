@@ -4,8 +4,13 @@ Frontend application for the Prep project.
 
 ## Live site
 
-Once the GitHub Pages workflow completes, the site will be available at:
 https://yuv9799.github.io/prep-frontend/
+
+## GitHub Pages deployment
+
+The `.github/workflows/deploy.yml` workflow builds the Vite app for the repository subpath. It sets `GITHUB_PAGES=true`, which makes Vite generate asset URLs under `/prep-frontend/`. The React Router uses Vite's base URL so deep links work, and `public/.nojekyll` disables Jekyll processing of the static artifact.
+
+After a new source commit, check the **Actions** tab for the “Deploy Prep Frontend to GitHub Pages” run. If a commit made through a bot/API does not start a workflow run automatically, use **Actions → Deploy Prep Frontend to GitHub Pages → Run workflow** on branch `master`.
 
 ## Requirements
 - Node.js 22 or compatible
